@@ -91,10 +91,30 @@ export interface Todo {
 // Add error handling for user input validation. Show red text or border for invalid input.
 // Display error messages for invalid input.
 
-export let todos: Todo[] = [];
+export const STORAGE_KEY = 'todos';
+export type StorageLike = Pick<Storage, 'getItem' | 'setItem' | 'removeItem'>;
+
+export const saveTodos = (todos: Todo[], storage: StorageLike = localStorage): void => {
+  storage.setItem(STORAGE_KEY, JSON.stringify(todos));
+};
+
+export const loadTodos = (storage: StorageLike = localStorage): Todo[] => {
+  try {
+    const stored = storage.getItem(STORAGE_KEY);
+    const parsed = stored ? JSON.parse(stored) : [];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+};
+
+export const clearStoredTodos = (storage: StorageLike = localStorage): void => {
+  storage.removeItem(STORAGE_KEY);
+};
+
+export let todos: Todo[] = loadTodos();   // must come after the helpers above
 type Filter = 'all' | 'done' | 'not-done';
 let currentFilter: Filter = 'all';
-
 const todoInput = document.getElementById('todo-input') as HTMLInputElement;
 const todoForm = document.querySelector('.todo-form') as HTMLFormElement;
 const todoList = document.getElementById('todo-list') as HTMLUListElement;
@@ -122,6 +142,7 @@ const getFilteredTodos = (): Todo[] => {
 
 // Rebuilds the todo list in the DOM from the todos array
 const renderTodos = (): void => {
+    saveTodos(todos);
   todoList.innerHTML = '';
 
   getFilteredTodos().forEach(todo => {
@@ -145,8 +166,6 @@ const renderTodos = (): void => {
     todoList.appendChild(li);
   });
 };
-// Initial render
-renderTodos();
 
 todoForm.addEventListener('submit', (event: Event) => {
   event.preventDefault();
@@ -242,6 +261,11 @@ document.querySelectorAll<HTMLButtonElement>('.filter-btn').forEach(btn => {
     renderTodos();
   });
 });
+const clearStorageBtn = document.getElementById('clear-storage') as HTMLButtonElement | null;
+clearStorageBtn?.addEventListener('click', () => {
+  todos = [];
+  renderTodos();
+});
 
 
 
@@ -296,3 +320,6 @@ const initializeColorPicker = (): void => {
 document.addEventListener('DOMContentLoaded', () => {
   initializeColorPicker();
 });
+
+// Initial render
+renderTodos();
