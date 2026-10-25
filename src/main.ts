@@ -96,6 +96,7 @@ export let todos: Todo[] = [];
 const todoInput = document.getElementById('todo-input') as HTMLInputElement;
 const todoForm = document.querySelector('.todo-form') as HTMLFormElement;
 const todoList = document.getElementById('todo-list') as HTMLUListElement;
+const clearCompletedBtn = document.getElementById('clear-completed') as HTMLButtonElement; //option 2
 
 // Creates a new todo and adds it to the array
 export const addTodo = (text: string): void => {
@@ -216,6 +217,13 @@ const translateBoolean = (todoItemStatus: boolean) => {
         return 'Not done'
     }
 }
+
+//option 2
+const clearCompleted = (): void => {
+  todos = todos.filter(todo => !todo.completed);
+  renderTodos();
+};
+clearCompletedBtn.addEventListener('click', clearCompleted);
 
 
 
