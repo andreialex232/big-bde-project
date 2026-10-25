@@ -92,6 +92,8 @@ export interface Todo {
 // Display error messages for invalid input.
 
 export let todos: Todo[] = [];
+type Filter = 'all' | 'done' | 'not-done';
+let currentFilter: Filter = 'all';
 
 const todoInput = document.getElementById('todo-input') as HTMLInputElement;
 const todoForm = document.querySelector('.todo-form') as HTMLFormElement;
@@ -110,11 +112,19 @@ export const addTodo = (text: string): void => {
   renderTodos();
 };
 
+
+// Option 3
+const getFilteredTodos = (): Todo[] => {
+  if (currentFilter === 'done') return todos.filter(todo => todo.completed);
+  if (currentFilter === 'not-done') return todos.filter(todo => !todo.completed);
+  return todos;
+};
+
 // Rebuilds the todo list in the DOM from the todos array
 const renderTodos = (): void => {
   todoList.innerHTML = '';
 
-  todos.forEach(todo => {
+  getFilteredTodos().forEach(todo => {
     const status = translateBoolean(todo.completed)
     const li = document.createElement('li');
     li.className = 'todo-item';
@@ -226,6 +236,12 @@ const clearCompleted = (): void => {
 clearCompletedBtn.addEventListener('click', clearCompleted);
 
 
+document.querySelectorAll<HTMLButtonElement>('.filter-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    currentFilter = btn.dataset.filter as Filter;
+    renderTodos();
+  });
+});
 
 
 
