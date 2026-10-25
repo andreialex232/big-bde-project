@@ -93,100 +93,102 @@ export interface Todo {
 
 export let todos: Todo[] = [];
 
-const todoInput = document.getElementById('todo-input') as HTMLInputElement; // exist in HTML file
-const todoForm = document.querySelector('.todo-form') as HTMLFormElement;    // exist in HTML file
-const todoList = document.getElementById('todo-list') as HTMLUListElement;   // exist in HTML file
+const todoInput = document.getElementById('todo-input') as HTMLInputElement;
+const todoForm = document.querySelector('.todo-form') as HTMLFormElement;
+const todoList = document.getElementById('todo-list') as HTMLUListElement;
 
-
-// Function to add a new todo: This function creates a new todo object and adds it to the array.
+// Creates a new todo and adds it to the array
 export const addTodo = (text: string): void => {
   const newTodo: Todo = {
-    id: Date.now(), // Generate a unique ID based on the current timestamp
+    id: Date.now(), // timestamp as a unique ID
     text: text,
     completed: false,
   };
   todos.push(newTodo);
-  console.log("Todo added: ", todos); // Log the updated list of todos to the console
-  renderTodos(); // Render the updated list of todos => create the function next
+  console.log("Todo added: ", todos);
+  renderTodos();
 };
 
-// Function to render the list of todos: This function updates the DOM to display the current list of todos.
-const renderTodos = (): void => { // void because no return - what we are doing is updating the DOM
-  // Clear the current list
+// Rebuilds the todo list in the DOM from the todos array
+const renderTodos = (): void => {
   todoList.innerHTML = '';
 
-  // Iterate over the todos array and create list items for each todo
-  todos.forEach(todo => { // In this specific case, .forEach is more suitable because we are directly modifying the DOM for each todo item.
+  todos.forEach(todo => {
+    const status = translateBoolean(todo.completed)
     const li = document.createElement('li');
-    li.className = 'todo-item'; // Add a class to the list item
-    // Use template literals to create the HTML content for each list item
+    li.className = 'todo-item';
     li.innerHTML = `
       <span>${todo.text}</span>
       <button>Remove</button>
          <button id="editBtn">Edit</button>
+         <div>
+            <span class="todoStatus">Status: ${status}</span>
+            <button id="toggleStatus">Toggle status</button>
+         </div>
+         
     `;
-    // addRemoveButtonListener is further down in the code. We have onclick in the function instead of template literals. More safe to use addEventListener.
-    addRemoveButtonListener(li, todo.id); // Add event listener to the remove button. li is the parent element, and todo.id is the ID of the todo. 
-    addEditButtonListener(li, todo.id); // Add event listener to the remove button. li is the parent element, and todo.id is the ID of the todo. 
-    todoList.appendChild(li); // Append the list item to the ul element
+    // Listeners are added with addEventListener instead of inline onclick, which is safer
+    addRemoveButtonListener(li, todo.id);
+    addEditButtonListener(li, todo.id);
+    toggleTodoStatusListener(li, todo.id) // Option 1
+    todoList.appendChild(li);
   });
 };
 // Initial render
 renderTodos();
 
 todoForm.addEventListener('submit', (event: Event) => {
-  event.preventDefault(); // Prevent the default form submission behavior
-  const text = todoInput.value.trim(); // Get the value of the input field and remove any leading or trailing whitespace - not needed, but good practice
-  if (text !== '') { // Check if the input field is not empty. Sort of a reverse falsey
+  event.preventDefault();
+  const text = todoInput.value.trim();
+  if (text !== '') {
     addTodo(text);
-    todoInput.value = ''; // Clear the input field
+    todoInput.value = '';
   }
 });
 
 const errorMessage = document.getElementById('error-message') as HTMLParagraphElement; // Should be moved to the top + added to the HTML file
 
 todoForm.addEventListener('submit', (event: Event) => {
-  event.preventDefault(); // Prevent the default form submission behavior
-  const text = todoInput.value.trim(); // Get the value of the input field and remove any leading or trailing whitespace
+  event.preventDefault();
+  const text = todoInput.value.trim();
 
-  if (text !== '') { // Check if the input field is empty
-    todoInput.classList.remove('input-error'); // Remove the error highlight if present
-    errorMessage.style.display = 'none'; // Hide the error message
-    addTodo(text); // Add the todo item
-    todoInput.value = ''; // Clear the input field
+  if (text !== '') {
+    todoInput.classList.remove('input-error');
+    errorMessage.style.display = 'none';
+    addTodo(text);
+    todoInput.value = '';
   } else {
-    console.log("Please enter a todo item"); // Provide feedback to the user
-    todoInput.classList.add('input-error'); // Add a class to highlight the error
-    errorMessage.style.display = 'block'; // Show the error message
+    console.log("Please enter a todo item");
+    todoInput.classList.add('input-error');
+    errorMessage.style.display = 'block';
   }
 });
 
-
-
-// Step 8: Function to removes all a todo by ID
-// Function to add event listener to the remove button - this function has an callback function that removes the todo item from the array.
+// Adds a click listener to the remove button of a todo item
 const addRemoveButtonListener = (li: HTMLLIElement, id: number): void => {
   const removeButton = li.querySelector('button');
-  removeButton?.addEventListener('click', () => removeTodo(id)); // We have an optional chaining operator here to avoid errors if the button is not found - for example, if the button is removed from the DOM.
+  removeButton?.addEventListener('click', () => removeTodo(id)); // optional chaining in case the button is missing
 };
 
-
-// Step 8: Function to remove a todo by ID
-// Function to remove a todo by ID: This function removes a todo from the array based on its ID.
+// Removes a todo from the array by ID
 export const removeTodo = (id: number): void => {
   todos = todos.filter(todo => todo.id !== id);
-  renderTodos(); // Re-render the updated list of todos
-}; 
+  renderTodos();
+};
 
-
-// Edit event listener - make button and add button to each todo
+// Adds a click listener to the edit button of a todo item
 const addEditButtonListener = (li: HTMLLIElement, id:number) => {
-  // make use of the editBtn id to edit the todo
   const editButton = li.querySelector('#editBtn')
   editButton?.addEventListener('click', () => editTodo(id)) 
 }
 
-// Edit function - prompt user to edit the todo : editTodo
+// Option 1
+const toggleTodoStatusListener = (li: HTMLElement, id:number) => {
+    const toggleBtn = li.querySelector('#toggleStatus')
+    toggleBtn?.addEventListener('click', () => toggleStatus(id));
+}
+
+// Prompts the user for new text and updates the todo
 const editTodo = (id:number) => {
   const todo = todos.find(todo => todo.id === id)
   if (todo) {
@@ -198,18 +200,65 @@ const editTodo = (id:number) => {
   }
 }
 
-/**
- * color picker
- */
+// Option 1
+const toggleStatus = (id:number) => {
+    const todo = todos.find(todo => todo.id === id);
+    if(todo) {
+        todo.completed = !todo.completed
+    }
+    renderTodos()
+}
 
-// Function to change the background color of the page based on the color picker value
+const translateBoolean = (todoItemStatus: boolean) => {
+    if(todoItemStatus) {
+        return 'Done'
+    } else {
+        return 'Not done'
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// Color picker: changes the page background color
 const changeBackgroundColor = (color: string): void => {
   document.body.style.backgroundColor = color;
 };
 
-// Function to initialize the color picker event listener
 const initializeColorPicker = (): void => {
-  const colorPicker = document.getElementById('colorPicker') as HTMLInputElement; // encapsulate the color picker element to this function
+  const colorPicker = document.getElementById('colorPicker') as HTMLInputElement;
   if (colorPicker) {
     colorPicker.addEventListener('input', (event: Event) => {
       const target = event.target as HTMLInputElement;
@@ -220,7 +269,6 @@ const initializeColorPicker = (): void => {
   }
 };
 
-// Call the initializeColorPicker function when the DOM is fully loaded
 document.addEventListener('DOMContentLoaded', () => {
   initializeColorPicker();
 });
