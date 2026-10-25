@@ -7,7 +7,6 @@ export interface Todo {
   completed: boolean;
 }
 
-
 /** 
  * Kristian: 6th of September 2024, BDE
  * 
