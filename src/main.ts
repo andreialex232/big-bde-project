@@ -1,4 +1,5 @@
 import './style.css';
+import { loadTodos, saveTodos } from './storage';
 
 export interface Todo {
   id: number;
@@ -91,10 +92,9 @@ export interface Todo {
 // Add error handling for user input validation. Show red text or border for invalid input.
 // Display error messages for invalid input.
 
-export let todos: Todo[] = [];
+export let todos: Todo[] = loadTodos();
 type Filter = 'all' | 'done' | 'not-done';
 let currentFilter: Filter = 'all';
-
 const todoInput = document.getElementById('todo-input') as HTMLInputElement;
 const todoForm = document.querySelector('.todo-form') as HTMLFormElement;
 const todoList = document.getElementById('todo-list') as HTMLUListElement;
@@ -122,6 +122,7 @@ const getFilteredTodos = (): Todo[] => {
 
 // Rebuilds the todo list in the DOM from the todos array
 const renderTodos = (): void => {
+    saveTodos(todos);
   todoList.innerHTML = '';
 
   getFilteredTodos().forEach(todo => {
@@ -145,8 +146,6 @@ const renderTodos = (): void => {
     todoList.appendChild(li);
   });
 };
-// Initial render
-renderTodos();
 
 todoForm.addEventListener('submit', (event: Event) => {
   event.preventDefault();
@@ -242,6 +241,11 @@ document.querySelectorAll<HTMLButtonElement>('.filter-btn').forEach(btn => {
     renderTodos();
   });
 });
+const clearStorageBtn = document.getElementById('clear-storage') as HTMLButtonElement | null;
+clearStorageBtn?.addEventListener('click', () => {
+  todos = [];
+  renderTodos();
+});
 
 
 
@@ -296,3 +300,6 @@ const initializeColorPicker = (): void => {
 document.addEventListener('DOMContentLoaded', () => {
   initializeColorPicker();
 });
+
+// Initial render
+renderTodos();
